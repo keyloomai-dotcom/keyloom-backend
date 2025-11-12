@@ -1,34 +1,30 @@
-require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Needed so we can read the raw body for signature verification
-app.use(bodyParser.raw({ type: "application/json" }));
-
-app.post("/webhook", (req, res) => {
+// ✅ Webhook route (for Lemon Squeezy)
+app.post("/webhook", bodyParser.raw({ type: "application/json" }), (req, res) => {
   const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
-  const hmac = crypto.createHmac("sha256", secret);
-  const digest = Buffer.from(
-    hmac.update(req.body).digest("hex"),
-    "utf8"
-  );
-  const signature = Buffer.from(req.get("X-Signature"), "utf8");
+  const sig = req.get("X-Signature");
+  const digest = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
 
-  if (!crypto.timingSafeEqual(digest, signature)) {
+  if (digest !== sig) {
     console.log("❌ Invalid signature");
     return res.status(400).send("Invalid signature");
   }
 
-  const event = JSON.parse(req.body.toString());
-  console.log("✅ Received webhook:", event.meta.event_name);
-
-  res.status(200).send("OK");
+  const event = JSON.parse(req.body.toString("utf8"));
+  console.log("✅ Webhook received:", event?.meta?.event_name);
+  res.send("OK");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// ✅ Simple homepage route
+app.get("/", (_req, res) => {
+  res.send("✅ Keyloom backend is live");
 });
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
