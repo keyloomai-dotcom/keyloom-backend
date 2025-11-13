@@ -235,12 +235,12 @@ return res.json({
   planName,
 });
 
-    });
+ 
 
-  } catch (err) {
+} catch (err) {
     console.error("Error in /auth/google/callback:", err);
     return res.status(500).json({ error: "Server error" });
-  }
+}
 });
 
 
