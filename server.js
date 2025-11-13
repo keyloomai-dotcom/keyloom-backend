@@ -4,7 +4,9 @@ const crypto = require("crypto");
 require("dotenv").config();
 
 const jwt = require("jsonwebtoken");
-const fetch = require("node-fetch");
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const app = express();
