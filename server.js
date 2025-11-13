@@ -141,7 +141,9 @@ const text =
   messageChunk?.content?.[0]?.text ??
   "";
 
+console.log("TEXT SENT TO CLIENT FROM /api/generate:", text);
 
+return res.status(200).json({ text });
 
 // You can log once for debugging if you want:
 // console.log("OpenAI raw response:", JSON.stringify(data));
