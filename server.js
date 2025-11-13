@@ -107,22 +107,19 @@ app.post("/api/generate", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
+        model: "gpt-5.1-nano",
+        input: prompt,
       }),
     });
 
-    if (!response.ok) {
+    if (!response.ok) {   // FIXED
       const errText = await response.text().catch(() => "");
       console.error("OpenAI HTTP error:", response.status, errText);
       return res.status(500).json({ error: "OpenAI request failed" });
@@ -130,21 +127,16 @@ app.post("/api/generate", requireAuth, async (req, res) => {
 
     const data = await response.json();
 
-    const text =
-      data?.choices?.[0]?.message?.content?.trim() || "";
+    const text = data.output[0].content[0].text;
 
-    if (!text) {
-      console.error("OpenAI format error:", data);
-      return res.status(500).json({ error: "OpenAI response format error" });
-    }
-
-    // This is exactly what the extension needs:
-    res.json({ text });
+    return res.json({ text });
   } catch (err) {
     console.error("Server error in /api/generate:", err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
+
+
 
 
 /** ─────────────────────────────────────────────────────────────
