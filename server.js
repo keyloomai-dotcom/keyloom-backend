@@ -4,8 +4,8 @@ const crypto = require("crypto");
 require("dotenv").config();
 
 const jwt = require("jsonwebtoken");
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const fetch = require("node-fetch");
+
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -170,5 +170,59 @@ app.get("/verify", (req, res) => {
  * Health route
  * ────────────────────────────────────────────────────────────*/
 app.get("/", (_req, res) => res.send("✅ Keyloom backend is live"));
+
+
+app.post("/auth/google/callback", async (req, res) => {
+  try {
+    const { code, redirectUri } = req.body;
+
+    if (!code || !redirectUri) {
+      return res.status(400).json({ error: "Missing code or redirectUri" });
+    }
+
+    // 1) Exchange the code for Google tokens
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    const tokenData = await tokenRes.json();
+
+    if (!tokenRes.ok) {
+      console.error("Google token error:", tokenData);
+      return res.status(500).json({ error: "Google token exchange failed" });
+    }
+
+    // 2) Get user info
+    const userRes = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      }
+    );
+
+    const user = await userRes.json();
+
+    return res.json({
+      ok: true,
+      user,
+    });
+
+  } catch (err) {
+    console.error("Error in /auth/google/callback:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
