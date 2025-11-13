@@ -176,6 +176,8 @@ app.post("/auth/google/callback", async (req, res) => {
   try {
     const { code, redirectUri } = req.body;
 
+    console.log("🔥 Hit /auth/google/callback", { code, redirectUri });
+
     if (!code || !redirectUri) {
       return res.status(400).json({ error: "Missing code or redirectUri" });
     }
