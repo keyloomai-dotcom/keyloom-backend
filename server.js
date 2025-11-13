@@ -110,14 +110,19 @@ app.post("/auth/dev-login", (req, res) => {
   res.json({ token });
 });
 
-
-app.post("/api/generate", requireAuth, async (req, res) => {
+app.post("/api/generate", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    // Accept flexible field names (Codex sometimes renames them)
+    const prompt =
+      req.body?.prompt ??
+      req.body?.text ??
+      req.body?.input ??
+      "";
 
     console.log("🔥 Hit /api/generate", {
-      email: req.user?.email,
-      promptLength: typeof prompt === "string" ? prompt.length : null,
+      bodySentFromExtension: req.body,
+      prompt,
+      promptLength: prompt.length,
     });
 
     if (!prompt) {
@@ -154,17 +159,14 @@ app.post("/api/generate", requireAuth, async (req, res) => {
       "";
 
     console.log("TEXT SENT TO CLIENT FROM /api/generate:", text);
-    console.log("✅ /api/generate sending back text:", text?.slice(0, 120));
+    console.log("✨ Success — sending response to extension.");
 
-    return res.status(200).json({ text });   // ← ONLY RETURN HERE
-
+    return res.status(200).json({ text });
   } catch (err) {
     console.error("❌ Server error in /api/generate:", err);
     return res.status(500).json({ error: "Server error" });
   }
 });
-
-
 
 
 /** ─────────────────────────────────────────────────────────────
