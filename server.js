@@ -3,14 +3,32 @@ const bodyParser = require("body-parser");
 const crypto = require("crypto");
 require("dotenv").config();
 
+const jwt = require("jsonwebtoken");
+const fetch = require("node-fetch");
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json({ limit: "1mb" }));
 /** ─────────────────────────────────────────────────────────────
  * TEMP “DB”: in-memory map of email → active (true/false)
  * (Good for testing. For production, use a real DB later.)
  * ────────────────────────────────────────────────────────────*/
 const subscriptions = new Map();
+
+function requireAuth(req, res, next) {
+  const h = req.headers.authorization || "";
+  const token = h.startsWith("Bearer ") ? h.slice(7) : null;
+  if (!token) return res.status(401).json({ error: "No token" });
+
+  try {
+    req.user = jwt.verify(token, process.env.SESSION_SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
 
 /** ─────────────────────────────────────────────────────────────
  *  Webhook from Lemon Squeezy
@@ -63,6 +81,56 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), (req, res) =>
   } catch (e) {
     console.error(e);
     res.status(500).send("Server error");
+  }
+});
+
+
+app.post("/auth/dev-login", (req, res) => {
+  const email = req.body?.email;
+  if (!email) {
+    return res.status(400).json({ error: "Missing email" });
+  }
+
+  const token = jwt.sign({ email }, process.env.SESSION_SECRET, {
+    expiresIn: "60m",
+  });
+
+  res.json({ token });
+});
+
+
+app.post("/api/generate", requireAuth, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Missing prompt" });
+    }
+
+    // Call OpenAI
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        input: prompt,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!data.output_text) {
+      console.error("OpenAI error:", data);
+      return res.status(500).json({ error: "OpenAI request failed" });
+    }
+
+    res.json({ text: data.output_text });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
