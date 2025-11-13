@@ -212,9 +212,29 @@ app.post("/auth/google/callback", async (req, res) => {
 
     const user = await userRes.json();
 
-    return res.json({
-      ok: true,
-      user,
+// 3) Create a JWT for the extension to use
+const payload = {
+  sub: user.sub,          // Google user ID
+  email: user.email,
+  name: user.name,
+};
+
+const token = jwt.sign(payload, process.env.SESSION_SECRET, {
+  expiresIn: "7d",        // 7 days token, fine for now
+});
+
+// TODO later: look up real plan in DB or subscriptions Map
+const isActive = true;     // temporary: treat everyone as active
+const planName = "Dev";    // temporary plan name
+
+// This shape is what the extension expects
+return res.json({
+  token,          // or sessionToken if your friend wired it that way
+  email: user.email,
+  isActive,
+  planName,
+});
+
     });
 
   } catch (err) {
