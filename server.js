@@ -12,6 +12,20 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(
+  cors({
+    origin: [
+      "chrome-extension://*",               // extension
+      "http://localhost:3000",              // local dev
+      "https://app.keyloom.ai",             // future frontend
+      "https://keyloom-backend.onrender.com" // backend
+    ],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "1mb" }));
 /** ─────────────────────────────────────────────────────────────
  * TEMP “DB”: in-memory map of email → active (true/false)
@@ -118,7 +132,7 @@ app.post("/api/generate", requireAuth, async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: "gpt-5-nano",
@@ -126,7 +140,7 @@ app.post("/api/generate", requireAuth, async (req, res) => {
       }),
     });
 
-    if (!response.ok) {   // FIXED
+    if (!response.ok) {
       const errText = await response.text().catch(() => "");
       console.error("OpenAI HTTP error:", response.status, errText);
       return res.status(500).json({ error: "OpenAI request failed" });
@@ -134,27 +148,20 @@ app.post("/api/generate", requireAuth, async (req, res) => {
 
     const data = await response.json();
 
-// DEBUG: show full OpenAI response in Render logs
-console.log("RAW OPENAI:", JSON.stringify(data, null, 2));
+    console.log("RAW OPENAI:", JSON.stringify(data, null, 2));
 
-// Safely get the text from Responses API
-// Safely get the text from Responses API
-const messageChunk = data.output?.find?.((item) => item.type === "message");
+    const messageChunk = data.output?.find?.((item) => item.type === "message");
 
-const text =
-  data.output_text ??
-  messageChunk?.content?.[0]?.text ??
-  "";
+    const text =
+      data.output_text ??
+      messageChunk?.content?.[0]?.text ??
+      "";
 
-console.log("TEXT SENT TO CLIENT FROM /api/generate:", text);
+    console.log("TEXT SENT TO CLIENT FROM /api/generate:", text);
+    console.log("✅ /api/generate sending back text:", text?.slice(0, 120));
 
-console.log("✅ /api/generate sending back text:", text?.slice(0, 120));
-return res.status(200).json({ text });
+    return res.status(200).json({ text });   // ← ONLY RETURN HERE
 
-// You can log once for debugging if you want:
-// console.log("OpenAI raw response:", JSON.stringify(data));
-
-    return res.json({ text });
   } catch (err) {
     console.error("❌ Server error in /api/generate:", err);
     return res.status(500).json({ error: "Server error" });
