@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 const crypto = require("crypto");
 require("dotenv").config();
 
@@ -14,12 +15,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: [
-      "chrome-extension://*",               // extension
-      "http://localhost:3000",              // local dev
-      "https://app.keyloom.ai",             // future frontend
-      "https://keyloom-backend.onrender.com" // backend
-    ],
+    origin: true,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
