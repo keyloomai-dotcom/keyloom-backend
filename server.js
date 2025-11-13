@@ -105,6 +105,11 @@ app.post("/api/generate", requireAuth, async (req, res) => {
   try {
     const { prompt } = req.body;
 
+    console.log("🔥 Hit /api/generate", {
+      email: req.user?.email,
+      promptLength: typeof prompt === "string" ? prompt.length : null,
+    });
+
     if (!prompt) {
       return res.status(400).json({ error: "Missing prompt" });
     }
@@ -143,6 +148,7 @@ const text =
 
 console.log("TEXT SENT TO CLIENT FROM /api/generate:", text);
 
+console.log("✅ /api/generate sending back text:", text?.slice(0, 120));
 return res.status(200).json({ text });
 
 // You can log once for debugging if you want:
@@ -150,7 +156,7 @@ return res.status(200).json({ text });
 
     return res.json({ text });
   } catch (err) {
-    console.error("Server error in /api/generate:", err);
+    console.error("❌ Server error in /api/generate:", err);
     return res.status(500).json({ error: "Server error" });
   }
 });
