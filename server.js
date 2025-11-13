@@ -129,7 +129,14 @@ app.post("/api/generate", requireAuth, async (req, res) => {
 
     const data = await response.json();
 
-    const text = data.output[0].content[0].text;
+// Safely get the text from Responses API
+const text =
+  data.output_text ??
+  data.output?.[0]?.content?.[0]?.text ??
+  "";
+
+// You can log once for debugging if you want:
+// console.log("OpenAI raw response:", JSON.stringify(data));
 
     return res.json({ text });
   } catch (err) {
