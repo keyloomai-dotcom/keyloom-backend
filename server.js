@@ -129,11 +129,15 @@ app.post("/api/generate", requireAuth, async (req, res) => {
 
     const data = await response.json();
 
+// DEBUG: show full OpenAI response in Render logs
+console.log("RAW OPENAI:", JSON.stringify(data, null, 2));
+
 // Safely get the text from Responses API
 const text =
   data.output_text ??
   data.output?.[0]?.content?.[0]?.text ??
   "";
+
 
 // You can log once for debugging if you want:
 // console.log("OpenAI raw response:", JSON.stringify(data));
