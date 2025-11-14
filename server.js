@@ -211,14 +211,16 @@ const response = await fetch("https://api.openai.com/v1/responses", {
     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
   },
   body: JSON.stringify({
-    model: "gpt-5-mini",
-    input:
-      "Rewrite the following text so it reads like clear, natural human writing. " +
-      "Preserve the original meaning, improve flow, vary sentence length, reduce repetition, " +
-      "and make it sound more conversational and personal where appropriate. " +
-      "Do not add new facts or change the core meaning.\n\n" +
-      text,
-  }),
+  model: "gpt-5-mini",
+  input:
+    "Improve the following text so it reads as natural, clear, and genuinely human. " +
+    "Keep the original meaning, but rewrite it with smoother flow, varied sentence structure, " +
+    "and a more natural communication style. Make it feel like something a real person would " +
+    "write in everyday conversation—warm, expressive, and thoughtfully phrased. " +
+    "Remove stiffness, repetition, or overly formal phrasing. Keep the message accurate, " +
+    "do not add new facts, and avoid changing the intent.\n\n" +
+    text,
+}),
 });
 
 
