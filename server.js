@@ -19,11 +19,11 @@ async function runOpenAIPass(
   prompt,
   {
     model = "gpt-5-mini",
-    temperature = 0.7,          // kept only for logging / experimentation
-    maxOutputTokens = 600,
+    temperature = 0.7,          // just for logging now
+    maxOutputTokens = 600,      // just for logging now
   } = {}
 ) {
-  console.log("🧠 OpenAI pass starting", { temperature, model });
+  console.log("🧠 OpenAI pass starting", { temperature, model, maxOutputTokens });
 
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -31,11 +31,10 @@ async function runOpenAIPass(
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
+    // 🔴 IMPORTANT: only send model + input; no temperature, no max_output_tokens
     body: JSON.stringify({
       model,
       input: prompt,
-      // IMPORTANT: this model does NOT support 'temperature' in the body
-      max_output_tokens: maxOutputTokens,
     }),
   });
 
@@ -57,6 +56,7 @@ async function runOpenAIPass(
 
   return (text || "").replace(/\\n/g, "\n").trim();
 }
+
 
 
 
