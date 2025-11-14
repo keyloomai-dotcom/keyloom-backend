@@ -191,7 +191,7 @@ app.post("/humanize", async (req, res) => {
 
     if (!text || !text.trim()) {
       return res.status(400).json({
-        error: "Missing text to humanize"
+        error: "Missing text to humanize",
       });
     }
 
@@ -199,63 +199,66 @@ app.post("/humanize", async (req, res) => {
     const MAX_CHARS = 5000;
     if (text.length > MAX_CHARS) {
       return res.status(413).json({
-        error: `Text too long. Keep it under ${MAX_CHARS} chars.`
+        error: `Text too long. Keep it under ${MAX_CHARS} chars.`,
       });
     }
 
     // ---- OPENAI CALL ----
-const response = await fetch("https://api.openai.com/v1/responses", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-  },
-  body: JSON.stringify({
-  model: "gpt-5-mini",
-  input:
-  "Rewrite the following text in a way that sounds like it was written by a real human thinking through their ideas naturally. " +
-  "Keep the original meaning, but make the writing feel more lived-in, less polished, and less formulaic. " +
-  "Use varied sentence lengths, subtle imperfections, natural pauses, and small personal touches that reflect how people actually write when they’re explaining something honestly and casually. " +
-  "Remove robotic structure, eliminate repetitive phrasing, and avoid overly neat transitions. " +
-  "Do NOT comment on the text or mention AI — just rewrite it with a warmer, more textured voice that feels spontaneous, reflective, and grounded in real experience.\n\n" +
-  "Here is the text:\n\n" +
-  text,
-
-
-
-}),
-});
-
-
-
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-5-mini",
+        input:
+          "Rewrite the following text in an authentic, naturally human voice. " +
+          "Keep the original meaning and important details fully intact, but express the ideas the way a real person might write them in their own words. " +
+          "Use a flow that feels lived in, expressive, and conversational rather than formal, stiff, or overly optimized. " +
+          "Let the rhythm vary: include some long, loosely structured sentences that wander a bit as someone thinks through an idea, followed by occasional short, direct sentences that break up the pacing. " +
+          "Avoid uniformity or rigid structure, and avoid repetitive patterns or perfectly symmetrical paragraph layouts. The writing should feel organic, with mild imperfections and small stylistic quirks that make it feel grounded and personal. " +
+          "Use natural transitions instead of mechanical ones. Do not rely on phrases like 'In conclusion', 'Furthermore', or 'Additionally' unless they genuinely fit the tone. Smooth out awkward or repetitive phrasing, and remove anything that feels formulaic or templated. " +
+          "Prioritize emotional nuance, personal perspective, and the subtle unpredictability that appears in real human communication. " +
+          "Follow these style constraints: do not use em dashes or long dash punctuation; only use hyphens when required within a single word. Keep any titles or headings in sentence case. Avoid excessive adjectives and avoid hyperbole. Avoid using the same transition phrases or filler vocabulary repeatedly. " +
+          "Avoid overused buzzwords or inflated terms such as 'compelling', 'crucial', 'utilize', 'leverage', 'paradigm', 'cutting edge', 'in today's world' and similar vague expressions. " +
+          "Do not add new factual information. Do not change the core intent. Do not shorten the text aggressively or turn it into a summary. " +
+          "Do not explain your changes and do not comment on the original text. Simply rewrite it so it reads as natural human communication, with organic variation in structure, rhythm, and voice.\n\n" +
+          "Here is the text to rewrite:" + text,
+      }),
+    });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenAI failed:", errorText);
-      return res.status(500).json({
-        error: "OpenAI request failed"
-      });
+      const errorText = await response.text().catch(() => "");
+      console.error("OpenAI failed:", response.status, errorText);
+      return res.status(500).json({ error: "OpenAI request failed" });
     }
 
     const data = await response.json();
 
-    // Extract output like your /api/generate
-    const messageChunk = data.output?.find?.(x => x.type === "message");
-    const humanizedText =
+    // Extract response like in /api/generate
+    const messageChunk = data.output?.find?.((x) => x.type === "message");
+    let humanizedText =
       data.output_text ||
       messageChunk?.content?.[0]?.text ||
       "";
 
-    console.log("✨ Humanized text sent to client.");
-    return res.json({ humanizedText });
+    // Clean up escaped newlines, extra blank space, etc.
+    const cleaned = humanizedText
+      .replace(/\\n/g, "\n")     // turn "\n" into actual line breaks if they appear escaped
+      .replace(/\n{3,}/g, "\n\n") // max 2 blank lines in a row
+      .trim();
 
+    console.log("✨ Humanized text sent to client.");
+    return res.json({ humanizedText: cleaned });
   } catch (err) {
     console.error("❌ /humanize error:", err);
     return res.status(500).json({
-      error: "Server error"
+      error: "Server error",
     });
   }
 });
+
 
 
 
