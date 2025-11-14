@@ -231,7 +231,7 @@ app.post("/humanize", async (req, res) => {
     // allow override but default to your sample
     const styleSample = (req.body?.styleSample || DEFAULT_STYLE_SAMPLE).trim();
 
-    console.log("🔥 Hit /humanize (pipeline v2)", {
+    console.log("🔥 Hit /humanize (pipeline v3)", {
       length: text.length,
       hasStyleSample: !!styleSample,
     });
@@ -266,11 +266,12 @@ ${current}
       maxOutputTokens: 800,
     });
 
-    // 🟩 PASS 2 — Paraphrase for fresh wording (still fairly clear)
+    // 🟩 PASS 2 — Paraphrase for fresh wording (still clear, not stiff)
     const pass2Prompt = `
 Paraphrase this text while preserving the exact meaning.
 Change sentence structures and word choices so it is not just light synonym swapping.
-Keep it clear and readable, but not stiff or academic.
+Keep it clear and readable, but do not make it stiff, formal, or academic.
+Stay close to a natural, conversational writing voice.
 
 Text:
 ${current}
@@ -307,7 +308,7 @@ ${current}
       maxOutputTokens: 1000,
     });
 
-    // 🟥 PASS 4 — "Human thinking in real time" pass (your old big prompt vibe)
+    // 🟥 PASS 4 — “Human thinking in real time” (your original big prompt)
     const pass4Prompt = `
 Rewrite the following text so it reads the way an actual person might write when they are thinking through their ideas in real time.
 
@@ -343,17 +344,40 @@ ${current}
       maxOutputTokens: 1100,
     });
 
-    // 🟪 PASS 5 — Final light grammar / polish without killing the chaos
+    // 🟫 PASS 5 — Natural variation / warmth / human rhythm
     const pass5Prompt = `
-Lightly edit the following text to fix obvious grammar, spelling, and punctuation mistakes.
-Do NOT make it more formal or structured.
-Preserve the messy, human, in-the-head feeling as much as possible.
+Rewrite the following text with subtle natural variation and human warmth.
+
+- Keep the meaning the same.
+- Mix short, medium, and long sentences in a way that feels natural.
+- Vary how sentences start so the openings are not repetitive.
+- Add 1–3 gentle asides or internal-thought style comments where they genuinely fit.
+- Blend simple wording with a few more specific or descriptive words.
+- Keep everything coherent and easy to read; do not introduce slang or jokes unless the tone already supports it.
+
+Do not add new factual content. Do not remove important ideas.
 
 Text:
 ${current}
     `.trim();
 
     current = await runOpenAIPass(pass5Prompt, {
+      temperature: 0.8,
+      model: "gpt-5-mini",
+      maxOutputTokens: 1000,
+    });
+
+    // 🟪 PASS 6 — Final light grammar / polish without killing the vibe
+    const pass6Prompt = `
+Lightly edit the following text to fix obvious grammar, spelling, and punctuation mistakes.
+Do NOT make it more formal, rigid, or academic.
+Preserve the human, slightly in-the-head feeling, the varied rhythm, and the small imperfections that make it feel natural.
+
+Text:
+${current}
+    `.trim();
+
+    current = await runOpenAIPass(pass6Prompt, {
       temperature: 0.25,
       model: "gpt-5-mini",
       maxOutputTokens: 900,
@@ -363,7 +387,7 @@ ${current}
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
-    console.log("✨ Humanized (pipeline v2) text ready.");
+    console.log("✨ Humanized (pipeline v3) text ready.");
     return res.json({ humanizedText: cleaned });
   } catch (err) {
     console.error("❌ /humanize pipeline error:", err);
@@ -372,6 +396,7 @@ ${current}
     });
   }
 });
+
 
 
 
