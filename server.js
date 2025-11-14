@@ -213,12 +213,15 @@ const response = await fetch("https://api.openai.com/v1/responses", {
   body: JSON.stringify({
   model: "gpt-5-mini",
   input:
-    "Transform the following text into a polished, natural, human-sounding version while keeping the original meaning fully intact. " +
-    "Make the writing flow smoothly with natural rhythm, expressive word choice, and varied sentence structure. " +
-    "Write with the tone of a thoughtful real person — warm, clear, and intentional — but not overly emotional or dramatic. " +
-    "Improve clarity, remove awkward phrasing, and avoid stiff or repetitive wording. " +
-    "Do NOT explain, evaluate, or comment on the text. Do NOT mention AI. " +
-    "Just deliver a clean, human-quality rewrite.\n\n" + text,
+  "Rewrite the following text in a way that sounds like it was written by a real human thinking through their ideas naturally. " +
+  "Keep the original meaning, but make the writing feel more lived-in, less polished, and less formulaic. " +
+  "Use varied sentence lengths, subtle imperfections, natural pauses, and small personal touches that reflect how people actually write when they’re explaining something honestly and casually. " +
+  "Remove robotic structure, eliminate repetitive phrasing, and avoid overly neat transitions. " +
+  "Do NOT comment on the text or mention AI — just rewrite it with a warmer, more textured voice that feels spontaneous, reflective, and grounded in real experience.\n\n" +
+  "Here is the text:\n\n" +
+  text,
+
+
 
 }),
 });
