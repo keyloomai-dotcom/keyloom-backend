@@ -213,19 +213,14 @@ app.post("/humanize", async (req, res) => {
       body: JSON.stringify({
         model: "gpt-5-mini",
         input:
-  "Rewrite the following text in an authentic, naturally human voice. " +
-  "Keep the original meaning and important details fully intact, but express the ideas the way a real person might write them in their own words. " +
-  "Use a flow that feels lived in, slightly informal, and conversational rather than formal, stiff, or overly optimized. " +
-  "Let the rhythm vary: include some long, loosely structured sentences that wander a bit as someone thinks through an idea, followed by occasional short, direct sentences that interrupt or emphasize a point. " +
-  "Avoid uniformity or rigid structure. Do not make every sentence the same length or every paragraph follow the same pattern. Allow mild imperfections and small stylistic quirks so the voice feels grounded and personal rather than polished and mechanical. " +
-  "Use natural, low key transitions instead of mechanical ones. Do not rely on phrases like 'In conclusion', 'Furthermore', or 'Additionally' unless they genuinely fit the tone. Smooth out awkward or repetitive wording, and remove anything that feels like a template. " +
-  "When appropriate, let the writing sound like someone thinking on the page—doubting slightly, circling back, or admitting nuance—without turning it into a monologue about the writing itself. " +
-  "Follow these style constraints: do not use em dashes or long dash punctuation; only use hyphens when required within a single word. Keep any titles or headings in sentence case. Avoid excessive adjectives and avoid hyperbole. Avoid using the same transition phrases or filler vocabulary repeatedly. " +
-  "Avoid overused buzzwords or inflated terms such as 'compelling', 'crucial', 'utilize', 'leverage', 'paradigm', 'cutting edge', 'in today's world' and similar vague expressions. " +
-  "Keep the tone balanced and even handed on topics that have nuance; do not sound absolutely certain about complex questions unless the original text is already very direct. " +
-  "Do not add new factual information and do not change the core intent. Do not shorten the text aggressively or turn it into a summary. " +
-  "Do not explain your changes and do not comment on the original text. Simply rewrite it so it reads as natural human communication, with organic variation in structure, rhythm, and voice—like a thoughtful person working through what they want to say.\n\n" +
-  "Here is the text to rewrite:" + text,
+"Rewrite the following text so it reads the way an actual person might write when they are thinking through their ideas in real time. Keep the original meaning, but let the expression sound more lived in, slightly scattered at moments, and not perfectly organized. Allow the writing to drift a little, circle back, hesitate, or shift tone the way people naturally do when they’re figuring out what they want to say. " +
+"Use a rhythm that mixes long, loosely connected sentences with brief, abrupt ones. Let some sentences trail slightly before picking up again. Avoid uniformity. Avoid the kind of symmetry or clean structure that feels planned. Include small quirks—subtle asides, imperfect transitions, a few conversational fillers when appropriate—without overdoing it. " +
+"Do not use em dashes or any long dash punctuation. Only use hyphens when required inside a single word. Keep titles or headings in sentence case. Avoid hyperbole, avoid stacked adjectives, and stay away from overused formal words such as ‘compelling,’ ‘crucial,’ ‘utilize,’ ‘leverage,’ ‘paradigm,’ ‘cutting edge,’ ‘in today's world,’ or similar inflated phrasing. " +
+"Do not try to sound absolutely certain about complex ideas. Use natural, low-key transitions instead of polished ones. Let the writing feel slightly imperfect but thoughtful, as if someone is working through their thoughts rather than presenting a finalized essay. It should not follow strict academic patterns like topic sentence → supporting details → clean wrap-up unless the original text forces it. " +
+"Do not add new facts. Do not remove important meaning. Do not summarize. Do not comment on the original text. Do not mention writing quality, analysis, or anything outside the rewritten text itself. " +
+"Simply return a version of the text that feels like genuine human communication—organic, varied, a little uneven at times, and grounded in a natural, personal way of expressing the same ideas.\n\n" +
+"Here is the text to rewrite:" + text,
+
 
       }),
     });
