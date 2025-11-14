@@ -204,17 +204,25 @@ app.post("/humanize", async (req, res) => {
     }
 
     // ---- OPENAI CALL ----
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-5-mini",
-        input: `Rewrite the following text to sound fully human, natural, emotional, undetectable by AI detectors, and aligned with casual human writing:\n\n${text}`
-      }),
-    });
+const response = await fetch("https://api.openai.com/v1/responses", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: "gpt-5-mini",
+    input:
+      "Rewrite the following text so it reads like clear, natural human writing. " +
+      "Preserve the original meaning, improve flow, vary sentence length, reduce repetition, " +
+      "and make it sound more conversational and personal where appropriate. " +
+      "Do not add new facts or change the core meaning.\n\n" +
+      text,
+  }),
+});
+
+
+
 
     if (!response.ok) {
       const errorText = await response.text();
