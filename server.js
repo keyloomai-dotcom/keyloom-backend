@@ -185,23 +185,25 @@ app.post("/humanize", async (req, res) => {
       "";
 
     console.log("🔥 Hit /humanize", {
-      bodyFromFrontend: req.body,
-      textLength: text.length,
+      body: req.body,
+      length: text.length,
     });
 
     if (!text || !text.trim()) {
-      return res.status(400).json({ error: "Missing text to humanize" });
-    }
-
-    // Optional: backend safety cap
-    const MAX_CHARS = 3000;
-    if (text.length > MAX_CHARS) {
-      return res.status(413).json({
-        error: `Text too long. Please keep it under ${MAX_CHARS} characters.`,
+      return res.status(400).json({
+        error: "Missing text to humanize"
       });
     }
 
-    // Use the SAME OpenAI Responses endpoint + model style you already use
+    // Backend safety cap
+    const MAX_CHARS = 5000;
+    if (text.length > MAX_CHARS) {
+      return res.status(413).json({
+        error: `Text too long. Keep it under ${MAX_CHARS} chars.`
+      });
+    }
+
+    // ---- OPENAI CALL ----
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -209,44 +211,39 @@ app.post("/humanize", async (req, res) => {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        // ⚠️ IMPORTANT: keep this the same family as what already works for you.
-        // You currently call "gpt-5-nano" in /api/generate and it’s working,
-        // so we reuse it here so nothing breaks.
-        model: "gpt-5-nano",
-
-        // Simple “humanize” instruction + original text
-        input:
-          "Rewrite the following AI-generated text so it sounds natural, human, and non-robotic. " +
-          "Preserve the meaning, but vary sentence lengths, remove repetitive phrasing, and avoid generic AI-style transitions. " +
-          "Do NOT add new facts or external research.\n\n" +
-          text,
+        model: "gpt-5-mini",
+        input: `Rewrite the following text to sound fully human, natural, emotional, undetectable by AI detectors, and aligned with casual human writing:\n\n${text}`
       }),
     });
 
     if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      console.error("OpenAI HTTP error (/humanize):", response.status, errText);
-      return res.status(500).json({ error: "OpenAI request failed" });
+      const errorText = await response.text();
+      console.error("OpenAI failed:", errorText);
+      return res.status(500).json({
+        error: "OpenAI request failed"
+      });
     }
 
     const data = await response.json();
-    console.log("RAW OPENAI (/humanize):", JSON.stringify(data, null, 2));
 
-    const messageChunk = data.output?.find?.((item) => item.type === "message");
+    // Extract output like your /api/generate
+    const messageChunk = data.output?.find?.(x => x.type === "message");
+    const humanizedText =
+      data.output_text ||
+      messageChunk?.content?.[0]?.text ||
+      "";
 
-    const humanized =
-      data.output_text ??
-      messageChunk?.content?.[0]?.text ??
-      text; // fallback to original if weird
+    console.log("✨ Humanized text sent to client.");
+    return res.json({ humanizedText });
 
-    console.log("TEXT SENT TO CLIENT FROM /humanize:", humanized.slice(0, 200));
-
-    return res.status(200).json({ humanizedText: humanized });
   } catch (err) {
-    console.error("❌ Server error in /humanize:", err);
-    return res.status(500).json({ error: "Server error" });
+    console.error("❌ /humanize error:", err);
+    return res.status(500).json({
+      error: "Server error"
+    });
   }
 });
+
 
 
 /** ─────────────────────────────────────────────────────────────
