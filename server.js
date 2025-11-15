@@ -65,12 +65,15 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: true,
-    methods: ["GET", "POST"],
+    origin: "*",               // allow all origins (fine for now)
+    methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
   })
 );
+
+// make sure OPTIONS (preflight) always succeeds
+app.options("*", cors());
+
 
 app.use(express.json({ limit: "1mb" }));
 /** ─────────────────────────────────────────────────────────────
