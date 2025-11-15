@@ -64,16 +64,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const allowedOrigins = [
-  "https://keyloom.ai",
-  "https://delicate-kimchi-554324.framer.app",
+  "https://keyloom.ai",                                   // custom domain
+  "https://delicate-kimchi-554324.framer.app",            // Framer base domain
+  "chrome-extension://lkpfokdejihbpdmekilfbfkpbfacdlpa",  // Chrome extension
+  "http://localhost:3000",                                // (optional) local dev
+  "http://localhost:5173",                                // (optional) local dev
 ];
+
 
 app.use(
   cors({
     origin(origin, callback) {
       // allow local tools / curl / Postman (no origin)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
       return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "OPTIONS"],
@@ -81,6 +89,7 @@ app.use(
     credentials: true,
   })
 );
+
 
 
 
