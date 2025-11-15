@@ -510,6 +510,85 @@ return res.json({
 });
 
 
+// ─────────────────────────────────────────────
+// Web login (for keyloom.ai, not the Chrome extension)
+// ─────────────────────────────────────────────
+const WEB_REDIRECT_URI =
+  "https://keyloom-backend.onrender.com/auth/web/google/callback";
+
+// Step 1: start Google OAuth from the website
+app.get("/auth/web/google", (req, res) => {
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    redirect_uri: WEB_REDIRECT_URI,
+    response_type: "code",
+    scope: "openid email profile",
+    access_type: "online",
+    prompt: "consent",
+  });
+
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  console.log("🔑 Redirecting to Google OAuth:", authUrl);
+  return res.redirect(authUrl);
+});
+
+// Step 2: Google redirects the browser back here
+app.get("/auth/web/google/callback", async (req, res) => {
+  try {
+    const code = req.query.code;
+    if (!code) {
+      return res.status(400).send("Missing ?code from Google");
+    }
+
+    console.log("🔥 Hit /auth/web/google/callback with code:", code);
+
+    // Exchange code for tokens
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: WEB_REDIRECT_URI,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok) {
+      console.error("Google token error (web):", tokenData);
+      return res.status(500).send("Google token exchange failed");
+    }
+
+    // Get user info
+    const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const user = await userRes.json();
+
+    const payload = {
+      sub: user.sub,
+      email: user.email,
+      name: user.name,
+    };
+
+    const token = jwt.sign(payload, process.env.SESSION_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // For now: send them back to the humanizer with token in the URL
+    // (Your Framer page can read this if you want, or you can switch to cookies later)
+    const redirectTo = `https://keyloom.ai/humanizer?token=${encodeURIComponent(
+      token
+    )}`;
+    console.log("✅ Web login success, redirecting to:", redirectTo);
+    return res.redirect(redirectTo);
+  } catch (err) {
+    console.error("Error in /auth/web/google/callback:", err);
+    return res.status(500).send("Server error");
+  }
+});
 
 
 
