@@ -63,16 +63,25 @@ async function runOpenAIPass(
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = [
+  "https://keyloom.ai",
+  "https://delicate-kimchi-554324.framer.app",
+];
+
 app.use(
   cors({
-    origin: "*",               // allow all origins (fine for now)
+    origin(origin, callback) {
+      // allow local tools / curl / Postman (no origin)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
-// make sure OPTIONS (preflight) always succeeds
-app.options("*", cors());
 
 
 app.use(express.json({ limit: "1mb" }));
